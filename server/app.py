@@ -52,6 +52,38 @@ api.add_resource(ClearSession, '/clear')
 api.add_resource(IndexArticle, '/articles')
 api.add_resource(ShowArticle, '/articles/<int:id>')
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+
+    user = User.query.filter_by(username=username).first()
+
+    if user:
+        session['user_id'] = user.id
+        return jsonify(user.to_dict()), 200  # ✅ must return user.id and user.username
+    else:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+
+@app.route('/logout', methods=['DELETE'])
+def logout():
+    session['user_id'] = None
+    return jsonify({}), 204
+
+
+@app.route('/check_session', methods=['GET'])
+def check_session():
+    user_id = session.get('user_id')
+
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            return jsonify(user.to_dict()), 200
+
+    return jsonify({}), 401
+
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
